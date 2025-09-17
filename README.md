@@ -49,6 +49,19 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .suggestion-chip {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .suggestion-chip:hover {
+            background-color: #bfdbfe;
+        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -85,7 +98,6 @@
             </div>
 
             <form id="surveyForm" class="space-y-10">
-                <!-- Survey questions will be here... -->
                 <div id="question1" class="bg-white p-6 rounded-lg shadow-md fade-in">
                     <fieldset>
                         <legend class="text-lg font-semibold text-gray-900 mb-4">1. 귀하의 소속 부서를 선택해주세요. <span class="text-red-500">*</span></legend>
@@ -229,13 +241,32 @@
                      <p class="text-gray-600 mb-4">귀하는 <strong id="dtNeedAreas" class="text-blue-600"></strong> 영역에서 DT 기술 도입이 시급하다고 응답하셨습니다. 해당 영역의 전문성을 강화하기 위한 맞춤형 학습 플랜을 세워보세요.</p>
                 </div>
             </div>
-             <div class="text-center mt-8 space-x-4">
-                <button id="downloadPdf" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition duration-300">
+             <div class="text-center mt-8 flex flex-wrap justify-center gap-4">
+                <button id="generateReportBtn" class="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition duration-300">
+                    ✨ AI 심층 분석 리포트
+                </button>
+                <button id="downloadPdf" class="bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition duration-300">
                     결과지 PDF로 저장
                 </button>
-                <button id="restartSurvey" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition duration-300">
+                <button id="restartSurvey" class="bg-gray-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition duration-300">
                     다시 진단하기
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-800">✨ AI 심층 분석 리포트</h2>
+                <button id="closeReportModal" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </div>
+            <div id="reportContent" class="p-6 overflow-y-auto">
+                <div id="reportLoader" class="flex justify-center items-center h-64">
+                    <div class="loader"></div>
+                </div>
+                <div id="reportText" class="text-gray-700 leading-relaxed whitespace-pre-wrap"></div>
             </div>
         </div>
     </div>
@@ -243,11 +274,8 @@
     <!-- Chatbot Floating Button and Modal -->
     <div id="chatbot-container" class="hidden fixed bottom-5 right-5 z-50">
         <button id="chatbot-fab" class="bg-blue-600 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM2 10a8 8 0 1116 0 8 8 0 01-16 0z" />
-                <path d="M7.707 6.293a1 1 0 011.414 0L10 7.586l.879-.88a1 1 0 111.414 1.414L11.414 9l.879.879a1 1 0 11-1.414 1.414L10 10.414l-.879.88a1 1 0 01-1.414-1.414L8.586 9 7.707 8.121a1 1 0 010-1.414z" clip-rule="evenodd" />
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM4 10a6 6 0 1112 0 6 6 0 01-12 0z" />
-                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm0 14a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1zM3 10a1 1 0 011-1h1a1 1 0 110 2H4a1 1 0 01-1-1zm14 0a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1z" clip-rule="evenodd" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
         </button>
         <div id="chatbot-window" class="hidden fixed bottom-24 right-5 w-96 h-[600px] bg-white rounded-lg shadow-2xl flex flex-col transition-all duration-300 origin-bottom-right">
@@ -256,7 +284,14 @@
                 <button id="close-chatbot" class="text-white">&times;</button>
             </div>
             <div id="chat-messages" class="flex-1 p-4 overflow-y-auto flex flex-col space-y-4">
-                <div class="chat-bubble bot-bubble">안녕하세요! DT 역량 진단 결과에 대해 궁금한 점이 있으신가요? 무엇이든 물어보세요.</div>
+                <div class="chat-bubble bot-bubble">
+                    안녕하세요! AI 역량 컨설턴트입니다. 진단 결과에 대해 궁금한 점을 해결해 드릴게요. 아래 제안을 선택하거나 직접 질문을 입력해주세요.
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        <button class="suggestion-chip">내 강점과 약점은?</button>
+                        <button class="suggestion-chip">1개월 학습 계획 짜줘</button>
+                        <button class="suggestion-chip">AI 리더가 되려면?</button>
+                    </div>
+                </div>
             </div>
             <div class="p-4 border-t">
                 <form id="chat-form" class="flex space-x-2">
@@ -280,6 +315,11 @@
             const progressBar = document.getElementById('progressBar');
             const restartButton = document.getElementById('restartSurvey');
             const downloadPdfBtn = document.getElementById('downloadPdf');
+            const generateReportBtn = document.getElementById('generateReportBtn');
+            const reportModal = document.getElementById('reportModal');
+            const closeReportModalBtn = document.getElementById('closeReportModal');
+            const reportLoader = document.getElementById('reportLoader');
+            const reportText = document.getElementById('reportText');
             const chatbotContainer = document.getElementById('chatbot-container');
             const chatbotFab = document.getElementById('chatbot-fab');
             const chatbotWindow = document.getElementById('chatbot-window');
@@ -349,6 +389,9 @@
                 });
             });
 
+            generateReportBtn.addEventListener('click', generateDetailedReport);
+            closeReportModalBtn.addEventListener('click', () => reportModal.classList.add('hidden'));
+
             chatbotFab.addEventListener('click', () => {
                 chatbotWindow.classList.toggle('hidden');
             });
@@ -378,9 +421,65 @@
                     lastMessageDiv.textContent = "죄송합니다, 답변을 생성하는 데 문제가 발생했습니다.";
                 }
             });
-
+            
+            chatMessages.addEventListener('click', function(e) {
+                if (e.target.classList.contains('suggestion-chip')) {
+                    const suggestionText = e.target.textContent;
+                    chatInput.value = suggestionText;
+                    chatForm.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                }
+            });
 
             // Functions
+            async function generateDetailedReport() {
+                if (!currentAnalysisResult) {
+                    alert("먼저 진단을 완료해주세요.");
+                    return;
+                }
+                reportText.innerHTML = '';
+                reportLoader.style.display = 'flex';
+                reportModal.classList.remove('hidden');
+                const systemPrompt = `당신은 HRD 전문 컨설턴트입니다. 사용자의 DT 역량 진단 결과를 바탕으로, 강점과 약점을 심층적으로 분석하고, 성장을 위한 구체적인 액션 플랜을 포함한 상세 리포트를 작성해주세요. 보고서는 격려하는 톤으로 작성하며, 다음 구조를 따라주세요:
+
+1.  **인트로**: 진단 결과에 대한 총평과 함께 사용자("임직원님")를 환영합니다.
+2.  **강점 분석**: 가장 높은 점수를 받은 1~2개 역량을 '강점'으로 지정하고, 칭찬과 함께 실제 업무에서 어떻게 더 잘 활용할 수 있을지 구체적인 예시를 들어 설명합니다.
+3.  **개선 영역 분석**: 가장 낮은 점수를 받은 1~2개 역량을 '보완이 필요한 영역'으로 지정합니다. 부정적인 표현 대신 '성장 기회'로 표현하며, 이 역량을 왜 키워야 하는지 중요성을 부드럽게 설명합니다.
+4.  **✨ 맞춤형 성장 로드맵**: 'AI 탐험가', 'AI 개척자', 'AI 리더' 레벨에 맞는 1개월 단위의 구체적인 학습 계획을 제시합니다. 사용자가 선택한 추천 교육 과정을 반드시 포함하고, 그 외에 온라인 강의, 도서 추천, 사내 스터디 제안 등 실행 가능한 액션 아이템을 2-3가지 제안합니다.
+5.  **마무리**: 전체 내용을 요약하고, 꾸준한 성장을 격려하는 긍정적인 메시지로 마무리합니다.
+
+각 섹션 제목은 마크다운 형식의 볼드체로 작성해주세요. (예: **1. 인트로**). 답변은 한국어로 작성해주세요.`;
+                const userContext = `
+- 종합 진단: ${currentAnalysisResult.tier}
+- AI 활용 유형: ${currentAnalysisResult.persona}
+- 역량 점수 (4점 만점): ${JSON.stringify(currentAnalysisResult.scores)}
+- 희망 교육 과정: ${currentAnalysisResult.courses}
+
+위 사용자의 진단 결과에 대한 심층 분석 리포트를 작성해주세요.`;
+                try {
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    const payload = {
+                        contents: [{ parts: [{ text: userContext }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] },
+                    };
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const result = await response.json();
+                    const report = result.candidates?.[0]?.content?.parts?.[0]?.text || "리포트를 생성하는 데 실패했습니다.";
+                    const formattedReport = report.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>');
+                    reportText.innerHTML = formattedReport;
+                } catch (error) {
+                    console.error("Report generation error:", error);
+                    reportText.textContent = "죄송합니다. 리포트를 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+                } finally {
+                    reportLoader.style.display = 'none';
+                }
+            }
+
             function updateProgress() {
                 const answeredCheckboxGroups = new Set();
                 form.querySelectorAll('input[type="checkbox"]').forEach(cb => { if (cb.checked) answeredCheckboxGroups.add(cb.name); });
@@ -557,3 +656,4 @@
     </script>
 </body>
 </html>
+
